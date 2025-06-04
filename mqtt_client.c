@@ -13,7 +13,7 @@
 #include "hardware/irq.h"           // Biblioteca de hardware de interrupções
 #include "hardware/adc.h"           // Biblioteca de hardware para conversão ADC
 
-#define LED 12//led azul que simula acionamento de bomba d'água
+#define LED_BLUE 12 //led azul que simula acionamento de bomba d'água
 #include "lwip/apps/mqtt.h"         // Biblioteca LWIP MQTT -  fornece funções e recursos para conexão MQTT
 #include "lwip/apps/mqtt_priv.h"    // Biblioteca que fornece funções e recursos para Geração de Conexões
 #include "lwip/dns.h"               // Biblioteca que fornece funções e recursos suporte DNS:
@@ -160,6 +160,10 @@ int main(void) {
     adc_set_temp_sensor_enabled(true);
     adc_select_input(4);
 
+    //definindo LED azul 
+    gpio_init(LED_BLUE);
+    gpio_set_dir(LED_BLUE , GPIO_OUT);
+
     // Cria registro com os dados do cliente
     static MQTT_CLIENT_DATA_T state;
 
@@ -282,14 +286,15 @@ static const char *full_topic(MQTT_CLIENT_DATA_T *state, const char *name) {
 #endif
 }
 
-// Controle do LED 
+// Controle do LED que simula bomba d'água
 static void control_led(MQTT_CLIENT_DATA_T *state, bool on) {
     // Publish state on /state topic and on/off led board
     const char* message = on ? "On" : "Off";
     if (on)
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+        gpio_put(LED_BLUE, 1);
     else
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        gpio_put(LED_BLUE, 0);
 
     mqtt_publish(state->mqtt_client_inst, full_topic(state, "/led/state"), message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
